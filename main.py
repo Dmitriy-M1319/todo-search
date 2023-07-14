@@ -19,23 +19,31 @@ def find_code_files(dirpath: str, file_type: str):
             if entry.is_file():
                 if entry.name.endswith(file_type):
                     find_todos(entry.path)
-            elif entry.is_dir():
+            elif not entry.name.startswith('.') and entry.is_dir():
                 find_code_files(entry.path, file_type)
-            else:
-                return -1
 
 
 def find_todos(filepath: str):
-    print(f'File with code: {filepath}')
+    with open(filepath) as fd:
+        line_index = 1
+        for line in fd:
+            if line.find('TODO') >= 0:
+                add_new_todo(line_index, line, filepath)
+            line_index += 1
     
 
 
 def add_new_todo(line: int, text: str, file: str):
-    pass
+    new_todo = ToDoLine(line_number=line,
+                        todo_text=text,
+                        filepath=file)
+    all_todos.append(new_todo)
 
 
 def print_todo(todo_item: ToDoLine):
-    pass
+    print(f"\nIn file: {todo_item.filepath}, line {todo_item.line_number}:")
+    print(f"\t{todo_item.line_number}| {todo_item.todo_text}")
+
 
 
 arg_parser = argparse.ArgumentParser(description="Find all TODO notes in directory with code")
@@ -49,6 +57,8 @@ def main():
         print(f'{args.dirpath}: No such directory')
         return -1
     find_code_files(args.dirpath, args.ftype)
+    for todo_line in all_todos:
+        print_todo(todo_line)
 
 
 if __name__ == '__main__':
